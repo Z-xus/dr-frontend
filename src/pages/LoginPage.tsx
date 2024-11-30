@@ -33,6 +33,10 @@ function LoginPage() {
         formData.email === "test@test.com" &&
         formData.password === "test123";
 
+      if (isTestCredentials) {
+        window.location.href = "/dashboard";
+      }
+
       const username = isTestCredentials ? "test" : formData.email;
 
       const response = await fetch("http://localhost:3000/login", {

@@ -10,6 +10,7 @@ import { PaymentsManager } from './pages/PaymentsManager.tsx'
 import PaymentsPage from './pages/Payment.tsx'
 import LoginPage from './pages/LoginPage.tsx'
 import DashboardPage from './pages/Dashboard.tsx'
+import Redact from './pages/Redact.tsx'
 
 const tmp = 'h-screen bg-black text-white text-4xl text-center grid place-items-center'
 const router = createBrowserRouter([
@@ -36,6 +37,10 @@ const router = createBrowserRouter([
       {
         path: '/login',
         element: <LoginPage />
+      },
+      {
+        path: '/redact',
+        element: <Redact />
       }
     ]
   }
