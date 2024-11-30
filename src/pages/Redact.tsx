@@ -1,41 +1,90 @@
-import React, { useState, useRef, useEffect, ChangeEvent } from 'react';
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+import React, { useState, useRef, useEffect } from 'react';
+import {
+  Card,
+  CardContent,
+  CardHeader,
+  CardTitle
+} from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue
+} from '@/components/ui/select';
 import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert';
-import { Upload, AlertTriangle, Clipboard } from 'lucide-react';
-import { Input } from '@/components/ui/input';
+import {
+  Upload,
+  AlertTriangle,
+  Download,
+  Clipboard,
+} from 'lucide-react';
+import { Checkbox } from '@/components/ui/checkbox';
+import { Label } from '@/components/ui/label';
 
-type RedactionColor = string;
+// Entities supported for redaction
+const ENTITY_TYPES = [
+  "PERSON",
+  "EMAIL_ADDRESS",
+  "PHONE_NUMBER",
+  "CREDIT_CARD",
+  "CRYPTO",
+  "DOMAIN_NAME",
+  "IP_ADDRESS",
+  "DATE_TIME",
+  "NRP",
+  "LOCATION",
+  "MEDICAL_LICENSE",
+  "URL",
+  "ORGANIZATION"
+];
 
-const Redact: React.FC = () => {
+// Language options
+const LANGUAGE_OPTIONS = [
+  { value: "en", label: "English" },
+  { value: "hi", label: "Hindi" },
+  { value: "mr", label: "Marathi" }
+];
+
+// File type mapping
+const FILE_TYPES = [
+  "csv", "json", "xlsx", "pdf", "docx",
+  "png", "jpg", "jpeg"
+];
+
+const PresidioRedactor: React.FC = () => {
+  // State management
   const [selectedFile, setSelectedFile] = useState<File | null>(null);
+  const [processedContent, setProcessedContent] = useState<string | ArrayBuffer | null>(null);
   const [previewImage, setPreviewImage] = useState<string | null>(null);
-  const [redactedImage, setRedactedImage] = useState<string | null>(null);
   const [error, setError] = useState<string | null>(null);
-  const [colorFill, setColorFill] = useState<RedactionColor>('#000000');
-  const [colorPickerMode, setColorPickerMode] = useState<'preset' | 'custom'>('preset');
+  const [language, setLanguage] = useState<string>("en");
+  const [selectedEntities, setSelectedEntities] = useState<string[]>([
+    "PERSON",
+    "EMAIL_ADDRESS",
+    "PHONE_NUMBER"
+  ]);
+  const [applyOCR, setApplyOCR] = useState<boolean>(false);
+
+  // Refs
   const fileInputRef = useRef<HTMLInputElement | null>(null);
+  const imageContainerRef = useRef<HTMLDivElement>(null);
 
-  const presetColorOptions: RedactionColor[] = [
-    '#000000', // Black
-    '#FFFFFF', // White
-    '#0000FF', // Blue
-    '#FF0000', // Red
-    '#00FF00', // Green
-    '#FFFF00'  // Yellow
-  ];
 
+  // Clipboard Paste Handler
   useEffect(() => {
-    // Clipboard paste event listener
     const handlePaste = (event: ClipboardEvent) => {
+      // Ensure we're not in an input field
+      if (document.activeElement !== document.body) return;
+
       const items = event.clipboardData?.items;
       if (items) {
         for (let i = 0; i < items.length; i++) {
           if (items[i].type.indexOf('image') !== -1) {
             const blob = items[i].getAsFile();
             if (blob) {
-              handleImagePaste(blob);
+              handleClipboardImage(blob);
               break;
             }
           }
@@ -43,16 +92,22 @@ const Redact: React.FC = () => {
       }
     };
 
+    // Add event listener
     document.addEventListener('paste', handlePaste);
+
+    // Cleanup
     return () => {
       document.removeEventListener('paste', handlePaste);
     };
   }, []);
 
-  const handleImagePaste = (file: File) => {
+  // Handle Clipboard Image
+  const handleClipboardImage = (blob: File) => {
+    // Create a file from the blob
+    const file = new File([blob], 'clipboard-image.png', { type: blob.type });
+
     setSelectedFile(file);
     setError(null);
-    setRedactedImage(null);
 
     // Create preview
     const reader = new FileReader();
@@ -62,164 +117,244 @@ const Redact: React.FC = () => {
     reader.readAsDataURL(file);
   };
 
-  const handleFileChange = (event: ChangeEvent<HTMLInputElement>) => {
+  // File handling
+  const handleFileChange = (event: React.ChangeEvent<HTMLInputElement>) => {
     const file = event.target.files?.[0];
     if (file) {
-      handleImagePaste(file);
+      setSelectedFile(file);
+      setError(null);
+
+      // Preview image if it's an image file
+      if (file.type.startsWith('image/')) {
+        const reader = new FileReader();
+        reader.onloadend = () => {
+          setPreviewImage(reader.result as string);
+        };
+        reader.readAsDataURL(file);
+      }
     }
   };
 
+
+  // Drag and Drop Handlers
+  const handleDragOver = (event: React.DragEvent<HTMLDivElement>) => {
+    event.preventDefault();
+    event.stopPropagation();
+  };
+
+  const handleDrop = (event: React.DragEvent<HTMLDivElement>) => {
+    event.preventDefault();
+    event.stopPropagation();
+
+    const files = event.dataTransfer.files;
+    if (files.length > 0 && files[0].type.startsWith('image/')) {
+      setSelectedFile(files[0]);
+
+      // Create preview
+      const reader = new FileReader();
+      reader.onloadend = () => {
+        setPreviewImage(reader.result as string);
+      };
+      reader.readAsDataURL(files[0]);
+    }
+  };
+
+  // Redaction handler
   const handleRedact = async () => {
     if (!selectedFile) {
-      setError('Please select an image first');
+      setError('Please select a file');
       return;
     }
-
+    const formData = new FormData();
+    formData.append('image', selectedFile);
+    formData.append('data', JSON.stringify({
+      color_fill: '000', // Example color fill, adjust as needed
+      analyzer_entities: selectedEntities,
+      apply_ocr: applyOCR,
+    }));
     try {
+      const response = await fetch('http://localhost:3000/redact', {
+        method: 'POST',
+        body: formData,
+      });
+      if (!response.ok) {
+        throw new Error('Redaction failed');
+      }
+      const result = await response.blob();
       const reader = new FileReader();
-      reader.onloadend = async () => {
-        const base64Image = (reader.result as string).split(',')[1]; // Remove data URL prefix
-
-        try {
-          const response = await fetch('http://localhost:3000/redact', {
-            method: 'POST',
-            headers: {
-              'Content-Type': 'application/json',
-            },
-            body: JSON.stringify({
-              image: base64Image,
-              color_fill: colorFill.replace('#', ''), // Remove # for API
-            }),
-          });
-
-          if (!response.ok) {
-            const errorData = await response.json();
-            throw new Error(errorData.error || 'Redaction failed');
-          }
-
-          const redactedImageBlob = await response.blob();
-          const redactedImageBase64 = await new Promise<string>((resolve, reject) => {
-            const reader = new FileReader();
-            reader.onloadend = () => resolve(reader.result as string);
-            reader.onerror = reject;
-            reader.readAsDataURL(redactedImageBlob);
-          });
-
-          setRedactedImage(redactedImageBase64);
-        } catch (apiError) {
-          if (apiError instanceof Error)
-            setError(apiError.message || 'An unknown error occurred');
-        }
-      };
-      reader.readAsDataURL(selectedFile);
+      if (selectedFile.type.startsWith('image/')) {
+        reader.onloadend = () => setProcessedContent(reader.result);
+        reader.readAsDataURL(result);
+      } else {
+        reader.onloadend = () => setProcessedContent(reader.result);
+        reader.readAsText(result);
+      }
     } catch (err) {
-      if (err instanceof Error)
-        setError(err.message || 'An unknown error occurred');
+      setError('An error occurred during redaction');
+      console.error(err);
     }
   };
 
-  const triggerFileInput = () => {
-    fileInputRef.current?.click();
+  // Download handler
+  const handleDownload = () => {
+    if (!processedContent) return;
+
+    const fileExtension = selectedFile?.name.split('.').pop() || 'txt';
+    const mimeTypes: { [key: string]: string } = {
+      'csv': 'text/csv',
+      'json': 'application/json',
+      'xlsx': 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet',
+      'pdf': 'application/pdf',
+      'docx': 'application/vnd.openxmlformats-officedocument.wordprocessingml.document',
+      'png': 'image/png',
+      'jpg': 'image/jpeg',
+      'jpeg': 'image/jpeg'
+    };
+
+    const blob = new Blob([processedContent], {
+      type: mimeTypes[fileExtension] || 'text/plain'
+    });
+    const url = window.URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = `redacted_document.${fileExtension}`;
+    a.click();
+    window.URL.revokeObjectURL(url);
   };
 
   return (
-    <div className="max-w-4xl mx-auto p-4">
+    <div
+      ref={imageContainerRef}
+      onDragOver={handleDragOver}
+      onDrop={handleDrop}
+      className="max-w-4xl mx-auto p-4">
       <Card>
         <CardHeader>
-          <CardTitle>Presidio Image Redactor</CardTitle>
+          <CardTitle>Image Redactor
+            <span className="text-sm text-muted-foreground ml-2">
+              (Paste or Drag & Drop Images) </span>
+          </CardTitle>
         </CardHeader>
         <CardContent>
-          <div className="space-y-4">
-            {/* File Upload Section */}
-            <div>
-              <input
-                type="file"
-                ref={fileInputRef}
-                onChange={handleFileChange}
-                accept="image/*"
-                className="hidden"
-              />
-              <div className="flex space-x-2">
-                <Button
-                  variant="outline"
-                  onClick={triggerFileInput}
-                  className="flex-grow"
-                >
-                  <Upload className="mr-2 h-4 w-4" />
-                  {selectedFile ? selectedFile.name : 'Upload Image'}
-                </Button>
-                <Button
-                  variant="secondary"
-                  size="icon"
-                  onClick={() => {
-                    navigator.clipboard.readText()
-                      .then((text) => {
-                        // Try to parse as base64 image
-                        if (text.startsWith('data:image')) {
-                          const blob = dataURLtoBlob(text);
-                          handleImagePaste(new File([blob], 'clipboard-image.png'));
-                        } else {
-                          setError('No image found in clipboard');
-                        }
-                      })
-                      .catch(() => setError('Failed to read clipboard'));
-                  }}
-                >
-                  <Clipboard className="h-4 w-4" />
-                </Button>
-              </div>
+          {/* Clipboard Paste Instruction */}
+          <div className="bg-secondary p-4 rounded-md mb-4 text-center">
+            <div className="flex items-center justify-center mb-2">
+              <Clipboard className="mr-2 h-6 w-6" />
+              <span>Press Ctrl+V (Cmd+V on Mac) to paste an image</span>
             </div>
+            <p className="text-sm text-muted-foreground">
+              You can also drag and drop images or use the upload button
+            </p>
+          </div>
 
-            {/* Color Selection */}
-            <div className="space-y-2">
-              <label className="block">Redaction Color</label>
-              <div className="flex space-x-2">
+          {/* Image Preview */}
+          {previewImage && (
+            <div className="mb-4">
+              <img
+                src={previewImage}
+                alt="Pasted or Uploaded"
+                className="max-w-full h-auto rounded-md mx-auto"
+              />
+            </div>
+          )}
+
+          {/* Buttons */}
+          <div className="flex space-x-2">
+            <Button
+              variant="outline"
+              className="flex-grow"
+              onClick={() => {
+                // Trigger clipboard paste programmatically
+                navigator.clipboard.readImage().then(blob => {
+                  if (blob) {
+                    handleClipboardImage(blob);
+                  } else {
+                    setError('No image found in clipboard');
+                  }
+                }).catch(err => {
+                  if (err instanceof Error) {
+                    setError('Failed to read clipboard');
+                    console.error(err);
+                  }
+                });
+              }}
+            >
+              <Clipboard className="mr-2 h-4 w-4" />
+              Paste from Clipboard
+            </Button>
+          </div>
+          {/* File Upload */}
+          <div className="space-y-4">
+            <input
+              type="file"
+              ref={fileInputRef}
+              onChange={handleFileChange}
+              accept={FILE_TYPES.map(type => `.${type}`).join(',')}
+              className="hidden"
+            />
+            <Button
+              variant="outline"
+              onClick={() => fileInputRef.current?.click()}
+              className="w-full"
+            >
+              <Upload className="mr-2 h-4 w-4" />
+              {selectedFile ? selectedFile.name : 'Upload Document/Image'}
+            </Button>
+
+            {/* Language Selection */}
+            <div className="grid grid-cols-2 gap-4">
+              <div>
+                <Label>Language</Label>
                 <Select
-                  value={colorPickerMode}
-                  onValueChange={(value: 'preset' | 'custom') => setColorPickerMode(value)}
+                  value={language}
+                  onValueChange={setLanguage}
                 >
-                  <SelectTrigger className="w-[180px]">
-                    <SelectValue placeholder="Color Mode" />
+                  <SelectTrigger>
+                    <SelectValue placeholder="Select Language" />
                   </SelectTrigger>
                   <SelectContent>
-                    <SelectItem value="preset">Preset Colors</SelectItem>
-                    <SelectItem value="custom">Custom Color</SelectItem>
+                    {LANGUAGE_OPTIONS.map(lang => (
+                      <SelectItem key={lang.value} value={lang.value}>
+                        {lang.label}
+                      </SelectItem>
+                    ))}
                   </SelectContent>
                 </Select>
+              </div>
 
-                {colorPickerMode === 'preset' ? (
-                  <Select
-                    value={colorFill}
-                    onValueChange={(value) => setColorFill(value)}
-                  >
-                    <SelectTrigger className="flex-grow">
-                      <SelectValue placeholder="Select Redaction Color" />
-                    </SelectTrigger>
-                    <SelectContent>
-                      {presetColorOptions.map((color) => (
-                        <SelectItem key={color} value={color}>
-                          <div className="flex items-center">
-                            <div
-                              className="w-4 h-4 mr-2 rounded-full border"
-                              style={{ backgroundColor: color }}
-                            />
-                            {color}
-                          </div>
-                        </SelectItem>
-                      ))}
-                    </SelectContent>
-                  </Select>
-                ) : (
-                  <div className="flex items-center space-x-2 flex-grow">
-                    <Input
-                      type="color"
-                      value={colorFill}
-                      onChange={(e) => setColorFill(e.target.value)}
-                      className="h-10 w-full p-0 border-none"
+              {/* OCR Toggle for Images */}
+              {selectedFile?.type.startsWith('image/') && (
+                <div className="flex items-center space-x-2">
+                  <Checkbox
+                    id="apply-ocr"
+                    checked={applyOCR}
+                    onCheckedChange={(checked) => setApplyOCR(!!checked)}
+                  />
+                  <Label htmlFor="apply-ocr">Apply OCR</Label>
+                </div>
+              )}
+            </div>
+
+            {/* Entity Selection */}
+            <div>
+              <Label>Select Entities to Redact</Label>
+              <div className="grid grid-cols-3 gap-2 mt-2">
+                {ENTITY_TYPES.map(entity => (
+                  <div key={entity} className="flex items-center space-x-2">
+                    <Checkbox
+                      id={entity}
+                      checked={selectedEntities.includes(entity)}
+                      onCheckedChange={(checked) => {
+                        setSelectedEntities(prev =>
+                          checked
+                            ? [...prev, entity]
+                            : prev.filter(e => e !== entity)
+                        );
+                      }}
                     />
-                    <span>{colorFill}</span>
+                    <Label htmlFor={entity}>{entity}</Label>
                   </div>
-                )}
+                ))}
               </div>
             </div>
 
@@ -229,7 +364,7 @@ const Redact: React.FC = () => {
               disabled={!selectedFile}
               className="w-full"
             >
-              Redact Image
+              Redact Document
             </Button>
 
             {/* Error Handling */}
@@ -241,38 +376,61 @@ const Redact: React.FC = () => {
               </Alert>
             )}
 
-            {/* Image Preview and Redacted Image */}
-            <div className="grid md:grid-cols-2 gap-4">
-              {previewImage && (
-                <Card>
-                  <CardHeader>
-                    <CardTitle>Original Image</CardTitle>
-                  </CardHeader>
-                  <CardContent>
-                    <img
-                      src={previewImage}
-                      alt="Original"
-                      className="max-w-full h-auto rounded-md"
-                    />
-                  </CardContent>
-                </Card>
-              )}
+            {/* Preview/Result Section */}
+            {(previewImage || processedContent) && (
+              <div className="grid md:grid-cols-2 gap-4 mt-4">
+                {/* Original Content */}
+                {previewImage && (
+                  <Card>
+                    <CardHeader>
+                      <CardTitle>Original Image</CardTitle>
+                    </CardHeader>
+                    <CardContent>
+                      <img
+                        src={previewImage}
+                        alt="Original"
+                        className="max-w-full h-auto rounded-md"
+                      />
+                    </CardContent>
+                  </Card>
+                )}
 
-              {redactedImage && (
-                <Card>
-                  <CardHeader>
-                    <CardTitle>Redacted Image</CardTitle>
-                  </CardHeader>
-                  <CardContent>
-                    <img
-                      src={redactedImage}
-                      alt="Redacted"
-                      className="max-w-full h-auto rounded-md"
-                    />
-                  </CardContent>
-                </Card>
-              )}
-            </div>
+                {/* Processed Content */}
+                {processedContent && (
+                  <Card>
+                    <CardHeader>
+                      <CardTitle>
+                        {previewImage ? 'Redacted Image' : 'Redacted Document'}
+                      </CardTitle>
+                    </CardHeader>
+                    <CardContent>
+                      {previewImage ? (
+                        <img
+                          src={processedContent as string}
+                          alt="Redacted"
+                          className="max-w-full h-auto rounded-md"
+                        />
+                      ) : (
+                        <pre className="overflow-x-auto max-h-[300px]">
+                          {processedContent as string}
+                        </pre>
+                      )}
+                    </CardContent>
+                  </Card>
+                )}
+              </div>
+            )}
+
+            {/* Download Button */}
+            {processedContent && (
+              <Button
+                onClick={handleDownload}
+                className="w-full mt-4"
+              >
+                <Download className="mr-2 h-4 w-4" />
+                Download Redacted {previewImage ? 'Image' : 'Document'}
+              </Button>
+            )}
           </div>
         </CardContent>
       </Card>
@@ -280,19 +438,4 @@ const Redact: React.FC = () => {
   );
 };
 
-// Utility function to convert data URL to Blob
-function dataURLtoBlob(dataURL: string): Blob {
-  const arr = dataURL.split(',');
-  const mime = arr[0].match(/:(.*?);/)?.[1];
-  const bstr = atob(arr[1]);
-  let n = bstr.length;
-  const u8arr = new Uint8Array(n);
-
-  while (n--) {
-    u8arr[n] = bstr.charCodeAt(n);
-  }
-
-  return new Blob([u8arr], { type: mime });
-}
-
-export default Redact;
+export default PresidioRedactor;

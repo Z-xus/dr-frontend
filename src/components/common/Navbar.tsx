@@ -29,7 +29,7 @@ const Navbar: React.FC = () => {
 						<div className="flex">
 							<div className="flex-shrink-0 flex items-center">
 								{/* Your logo or brand icon */}
-								<span className="text-xl text-gray-900 dark:text-gray-300 font-bold">Genesis DeFi</span>
+								<span className="text-xl text-gray-900 dark:text-gray-300 font-bold">Data Rakshak</span>
 							</div>
 						</div>
 
