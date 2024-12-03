@@ -4,13 +4,12 @@ import App from './App.tsx'
 import './index.css'
 import { createBrowserRouter, RouterProvider } from 'react-router-dom'
 import { SignupPage } from './pages'
-// import { PaymentsPage } from './pages/Payment.tsx'
-import { PaymentsPage2 } from './pages/PaymentsPage2.tsx'
 import { PaymentsManager } from './pages/PaymentsManager.tsx'
 import PaymentsPage from './pages/Payment.tsx'
 import LoginPage from './pages/LoginPage.tsx'
 import DashboardPage from './pages/Dashboard.tsx'
 import Redact from './pages/Redact.tsx'
+import Analyzer from './pages/Analyzer.tsx'
 
 const tmp = 'h-screen bg-black text-white text-4xl text-center grid place-items-center'
 const router = createBrowserRouter([
@@ -37,6 +36,9 @@ const router = createBrowserRouter([
       {
         path: '/login',
         element: <LoginPage />
+      }, {
+        path: '/analyze',
+        element: <Analyzer />
       },
       {
         path: '/redact',
