@@ -16,7 +16,7 @@ import {
 } from '@/components/ui/select';
 import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert';
 import { Input } from '@/components/ui/input';
-import { AlertTriangle } from 'lucide-react';
+import { AlertTriangle, Clipboard } from 'lucide-react';
 
 const API_BASE_URL = 'http://localhost:3000';
 
@@ -90,6 +90,7 @@ export default function AnalyzerPage() {
       if (!response.ok) throw new Error('Failed to analyze text');
       const result = await response.json();
       setAnalysisResult(result);
+      setError(null);
     } catch (err) {
       setError('Error analyzing text');
     }
@@ -197,8 +198,11 @@ export default function AnalyzerPage() {
 
             {/* Analysis Result */}
             {analysisResult && (
-              <div className="mt-6">
+              <div className="mt-6 relative">
                 <h2 className="text-lg font-medium">Analysis Result</h2>
+                <Button className="absolute right-2" variant="outline" size="sm" onClick={() => { navigator.clipboard.writeText(JSON.stringify(analysisResult, null, 2)) }}>
+                  <Clipboard className="h-4 w-4" />
+                </Button>
                 <pre className="bg-gray-200 p-4 rounded-md overflow-auto">
                   {JSON.stringify(analysisResult, null, 2)}
                 </pre>
