@@ -10,6 +10,7 @@ import LoginPage from './pages/LoginPage.tsx'
 import DashboardPage from './pages/Dashboard.tsx'
 import Redact from './pages/Redact.tsx'
 import Analyzer from './pages/Analyzer.tsx'
+import Test from './pages/Test.tsx'
 
 const tmp = 'h-screen bg-black text-white text-4xl text-center grid place-items-center'
 const router = createBrowserRouter([
@@ -43,6 +44,9 @@ const router = createBrowserRouter([
       {
         path: '/redact',
         element: <Redact />
+      }, {
+        path: '/test',
+        element: <Test />
       }
     ]
   }

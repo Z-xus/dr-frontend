@@ -134,7 +134,9 @@ export default function AnalyzerPage() {
                 <SelectContent>
                   <SelectItem value="en">English</SelectItem>
                   <SelectItem value="es">Spanish</SelectItem>
+                  <SelectItem value="mr">Marathi</SelectItem>
                   <SelectItem value="hi">Hindi</SelectItem>
+                  <SelectItem value="ka">Kannada</SelectItem>
                   {/* Add more languages as needed */}
                 </SelectContent>
               </Select>
