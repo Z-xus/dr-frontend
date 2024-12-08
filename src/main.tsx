@@ -4,13 +4,13 @@ import App from './App.tsx'
 import './index.css'
 import { createBrowserRouter, RouterProvider } from 'react-router-dom'
 import { SignupPage } from './pages'
-import { PaymentsManager } from './pages/PaymentsManager.tsx'
-import PaymentsPage from './pages/Payment.tsx'
 import LoginPage from './pages/LoginPage.tsx'
 import DashboardPage from './pages/Dashboard.tsx'
 import Redact from './pages/Redact.tsx'
 import Analyzer from './pages/Analyzer.tsx'
 import Test from './pages/Test.tsx'
+import RedactPdf from './pages/RedactPdf.tsx'
+import RedactImage from './pages/RedactImage.tsx'
 
 const tmp = 'h-screen bg-black text-white text-4xl text-center grid place-items-center'
 const router = createBrowserRouter([
@@ -26,13 +26,6 @@ const router = createBrowserRouter([
       {
         path: '/signup',
         element: <SignupPage />,
-      }, {
-        path: '/pay',
-        element: <PaymentsManager />
-      },
-      {
-        path: '/payments',
-        element: <PaymentsPage />
       },
       {
         path: '/login',
@@ -47,6 +40,12 @@ const router = createBrowserRouter([
       }, {
         path: '/test',
         element: <Test />
+      }, {
+        path: '/test-pdf',
+        element: <RedactPdf />
+      }, {
+        path: '/test-image',
+        element: <RedactImage />
       }
     ]
   }
