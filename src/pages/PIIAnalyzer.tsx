@@ -40,7 +40,11 @@ export default function Analyzer() {
         language,
         entities: selectedEntities.length ? selectedEntities : undefined,
       };
-      const response = await api.post(API_ENDPOINTS.ANALYZE, payload);
+      const response = await api.post(API_ENDPOINTS.ANALYZE, payload, {
+        headers: {
+          "Content-Type": "application/json",
+        },
+      });
       setAnalysisResult(response.data);
     } catch (err) {
       setError(ERROR_MESSAGES.ANALYSIS_FAILED);
@@ -52,6 +56,7 @@ export default function Analyzer() {
 
   const handleDownload = () => {
     if (analysisResult) {
+      // TODO: Fix this to take in the result, it's empty right now.
       const blob = new Blob([JSON.stringify(analysisResult, null, 2)], { type: 'application/json' });
       const url = URL.createObjectURL(blob);
       const a = document.createElement('a');
@@ -73,7 +78,7 @@ export default function Analyzer() {
 
   useEffect(() => {
     const currentRef = textContainerRef.current;
-    
+
     if (currentRef) {
       currentRef.addEventListener('paste', handlePaste);
     }
@@ -106,7 +111,7 @@ export default function Analyzer() {
           <Card className="shadow-lg border-primary/10 backdrop-blur-sm bg-background/95 overflow-hidden">
             <div className="h-1 w-full bg-gradient-to-r from-primary/80 via-primary to-primary/80">
             </div>
-            
+
             <CardHeader className="pb-4">
               <CardTitle className="text-xl font-bold text-center flex items-center justify-center gap-2">
                 <div className="relative h-6 w-6">
@@ -122,7 +127,7 @@ export default function Analyzer() {
                 </span>
               </CardTitle>
             </CardHeader>
-            
+
             <CardContent className="space-y-4">
               {/* Text Input Section */}
               <motion.div
