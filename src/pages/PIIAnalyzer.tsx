@@ -44,8 +44,11 @@ export default function Analyzer() {
         headers: {
           "Content-Type": "application/json",
         },
+        responseType: "blob",
       });
-      setAnalysisResult(response.data);
+
+      const blobText = await response.data.text();
+      setAnalysisResult(blobText);
     } catch (err) {
       setError(ERROR_MESSAGES.ANALYSIS_FAILED);
       console.error(err);
@@ -56,7 +59,6 @@ export default function Analyzer() {
 
   const handleDownload = () => {
     if (analysisResult) {
-      // TODO: Fix this to take in the result, it's empty right now.
       const blob = new Blob([JSON.stringify(analysisResult, null, 2)], { type: 'application/json' });
       const url = URL.createObjectURL(blob);
       const a = document.createElement('a');
