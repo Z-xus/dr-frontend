@@ -1,5 +1,6 @@
 const ENTITY_TYPES = [
   "PERSON",
+  "ID",
   "EMAIL_ADDRESS",
   "PHONE_NUMBER",
   "CREDIT_CARD",

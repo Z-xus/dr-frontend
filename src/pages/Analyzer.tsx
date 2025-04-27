@@ -20,8 +20,9 @@ import { AlertTriangle, Clipboard } from 'lucide-react';
 
 const API_BASE_URL = 'http://localhost:3000';
 
+
 export default function AnalyzerPage() {
-  const [healthStatus, setHealthStatus] = useState<string | null>(null);
+  // const [healthStatus, setHealthStatus] = useState<string | null>(null);
   const [text, setText] = useState('');
   const [language, setLanguage] = useState('en');
   const [entities, setEntities] = useState<string[]>([]);
@@ -89,6 +90,9 @@ export default function AnalyzerPage() {
       });
       if (!response.ok) throw new Error('Failed to analyze text');
       const result = await response.json();
+      // const humanReadablePII = result.entities.map((entity: Entity) => entity.text);
+      // console.log('PII:', humanReadablePII);
+      // console.log(humanReadablePII);
       setAnalysisResult(result);
       setError(null);
     } catch (err) {
@@ -106,17 +110,10 @@ export default function AnalyzerPage() {
         <Card className="shadow-lg">
           <CardHeader>
             <CardTitle className="text-2xl font-bold text-center">
-              Presidio Analyzer Client
+              Analyzer Client
             </CardTitle>
           </CardHeader>
           <CardContent>
-            {/* Health Status */}
-            <div className="mb-6">
-              <h2 className="text-lg font-medium">Server Health</h2>
-              <p className="text-sm text-muted-foreground">
-                {healthStatus || 'Checking server health...'}
-              </p>
-            </div>
 
             {/* Language Selection */}
             <div className="mb-6">

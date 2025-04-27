@@ -11,6 +11,7 @@ import Analyzer from './pages/Analyzer.tsx'
 import Test from './pages/Test.tsx'
 import RedactPdf from './pages/RedactPdf.tsx'
 import RedactImage from './pages/RedactImage.tsx'
+import EncryptPdf from './pages/EncryptPdf.tsx'
 
 const tmp = 'h-screen bg-black text-white text-4xl text-center grid place-items-center'
 const router = createBrowserRouter([
@@ -46,6 +47,9 @@ const router = createBrowserRouter([
       }, {
         path: '/test-image',
         element: <RedactImage />
+      }, {
+        path: '/encr-pdf',
+        element: <EncryptPdf />
       }
     ]
   }

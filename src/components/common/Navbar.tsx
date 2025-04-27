@@ -4,10 +4,13 @@ import { Moon, Sun } from 'lucide-react';
 
 // Define navigation links
 const navLinks = [
-	{ to: '/signup', label: 'SignUp' },
-	{ to: '/login', label: 'Login' },
-	{ to: '/dashboard', label: 'Dashboard' },
-	{ to: '/payments', label: 'Payments' }
+	{ to: '/analyze', label: 'Analyze PIIs' },
+	{ to: '/test-image', label: 'Redact Images' },
+	{ to: '/test-pdf', label: 'Redact Pdfs' },
+	{ to: '/encr-pdf', label: 'Encrypt Pdfs' },
+	// { to: '/login', label: 'Login' },
+	// { to: '/dashboard', label: 'Dashboard' },
+	// { to: '/payments', label: 'Payments' }
 ];
 
 const Navbar: React.FC = () => {
@@ -29,7 +32,7 @@ const Navbar: React.FC = () => {
 						<div className="flex">
 							<div className="flex-shrink-0 flex items-center">
 								{/* Your logo or brand icon */}
-								<span className="text-xl text-gray-900 dark:text-gray-300 font-bold">Data Rakshak</span>
+								<span className="text-xl text-gray-900 dark:text-gray-300 font-bold">Censorly</span>
 							</div>
 						</div>
 

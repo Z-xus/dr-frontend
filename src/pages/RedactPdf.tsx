@@ -1,5 +1,5 @@
 import { useState, useRef } from 'react';
-import { Upload, Clipboard, X, Download, AlertTriangle, FileText } from 'lucide-react';
+import { Upload, X, Download, AlertTriangle, FileText } from 'lucide-react';
 
 import {
   Card,

@@ -39,7 +39,7 @@ export default function Test() {
     }
 
     try {
-      const response = await fetch('http://localhost:5000/analyze', {
+      const response = await fetch('http://localhost:3000/analyze', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
@@ -70,7 +70,7 @@ export default function Test() {
     }
 
     try {
-      const response = await fetch('http://localhost:5000/process', {
+      const response = await fetch('http://localhost:3000/process', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
