@@ -1,31 +1,47 @@
-const ENTITY_TYPES = [
-  "PERSON",
-  "ID",
-  "EMAIL_ADDRESS",
-  "PHONE_NUMBER",
-  "CREDIT_CARD",
-  "CRYPTO",
-  "DOMAIN_NAME",
-  "IP_ADDRESS",
-  "DATE_TIME",
-  "NRP",
-  "LOCATION",
-  "MEDICAL_LICENSE",
-  "URL",
-  "ORGANIZATION"
-];
+// Language options for all pages
+export const LANGUAGE_OPTIONS = [
+  { value: 'en', label: 'English' },
+  { value: 'es', label: 'Spanish' },
+  { value: 'mr', label: 'Marathi' },
+  { value: 'hi', label: 'Hindi' },
+  { value: 'ka', label: 'Kannada' }
+] as const;
 
-// Language options
-const LANGUAGE_OPTIONS = [
-  { value: "en", label: "English" },
-  { value: "hi", label: "Hindi" },
-  { value: "mr", label: "Marathi" }
-];
+// Entity types for PII detection
+export const ENTITY_TYPES = [
+  'PERSON',
+  'ORGANIZATION',
+  'LOCATION',
+  'DATE',
+  'TIME',
+  'MONEY',
+  'PERCENT',
+  'EMAIL',
+  'PHONE',
+  'URL'
+] as const;
 
-// File type mapping
-const FILE_TYPES = [
-  "csv", "json", "xlsx", "pdf", "docx",
-  "png", "jpg", "jpeg"
-];
+// API endpoints
+export const API_ENDPOINTS = {
+  ANALYZE: '/analyze',
+  REDACT: '/redact',
+  SUPPORTED_ENTITIES: '/supportedentities',
+  RECOGNIZERS: '/recognizers',
+  HEALTH: '/health'
+} as const;
 
-export { ENTITY_TYPES, LANGUAGE_OPTIONS, FILE_TYPES };
+// File types
+export const FILE_TYPES = {
+  PDF: 'application/pdf',
+  IMAGE: 'image/*'
+} as const;
+
+// Common error messages
+export const ERROR_MESSAGES = {
+  NO_TEXT: 'Please enter some text to analyze',
+  NO_FILE: 'Please select a file',
+  INVALID_FILE_TYPE: 'Please select a valid file type',
+  ANALYSIS_FAILED: 'Failed to analyze content',
+  PROCESSING_FAILED: 'Failed to process content',
+  API_ERROR: 'An error occurred while communicating with the server'
+} as const;
